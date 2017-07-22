@@ -34,19 +34,16 @@ public class SphereController : MonoBehaviour {
 
     void OnCollisionEnter2D(Collision2D coll)
     {
-        if (coll.gameObject.CompareTag("PlayerProjectiles"))
-        {
-            currentVel = rb.velocity;
-            rb.velocity = new Vector2(currentVel.x, currentVel.y);
-        }
         if (coll.gameObject.CompareTag("Ground") && transform.localScale.y > 2)
         {
-            Debug.Log("");
+            Debug.Log("Sphere size decreased");
             sphereSize = sphereSize - 3;
             transform.localScale = new Vector3(Mathf.Clamp(sphereSize, minX, maxX), Mathf.Clamp(sphereSize, minY, maxY), transform.localScale.z);
         }
-        if (coll.gameObject.CompareTag("Powerup"))
-        {
+    }
+
+    private void OnTriggerEnter2D(Collider2D coll) {
+        if (coll.gameObject.CompareTag("Powerup")) {
             Debug.Log("Nomnomnom");
             sphereSize = sphereSize + 1;
             transform.localScale = new Vector3(Mathf.Clamp(sphereSize, minX, maxX), Mathf.Clamp(sphereSize, minY, maxY), transform.localScale.z);
