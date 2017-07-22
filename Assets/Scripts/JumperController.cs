@@ -6,29 +6,31 @@ public class JumperController : MonoBehaviour {
 
     public float speed = 20f;
     public float jumpSpeed = 20f;
+    public float timeSinceShot;
 
     private GameObject player;
     private Rigidbody2D rb;
     private Camera cam;
     private KeyCode jumpKey, fireLeftKey, fireRightKey;
     private JumperMovement movement;
-    private Animator anim;
+    private JumperShooter shooter;
 
     private int jumpCount;
-    private float playerPos, distance, targetPos, minX, maxX, camHeight, camWidth;
+    private float playerPos, distance, targetPos, minX, maxX, camHeight, camWidth, shotCooldown;
 
-    // Use this for initialization
     void Start () {
         player = gameObject;
         rb = GetComponent<Rigidbody2D>();
         cam = GameObject.FindObjectOfType<Camera>();
         movement = GetComponent<JumperMovement>();
-        anim = GetComponent<Animator>();
+        shooter = GetComponent<JumperShooter>();
 
         camHeight = cam.orthographicSize * 2;                     //orthoSize = camera height half-size in game units
         camWidth = cam.aspect * camHeight;
         minX = -camWidth / 2 + 1;                                  //plus or minus 1 for the walls, .5 for half player
         maxX = camWidth / 2 - 1;
+        timeSinceShot = 10f;
+        shotCooldown = .5f;
 
         jumpKey = KeyCode.UpArrow;
         fireLeftKey = KeyCode.Keypad1;
@@ -46,17 +48,34 @@ public class JumperController : MonoBehaviour {
             jumpCount++;
         }
 
-        if (Input.GetKeyDown(fireLeftKey))
+        if (!shooter.isShooting)
         {
-            anim.SetFloat("angle", -1f);
-            anim.SetTrigger("FireLeft Trigger");
-        } else if (Input.GetKeyDown(fireRightKey))
-        {
-            anim.SetFloat("angle", 1f);
-            anim.SetTrigger("FireRight Trigger");
+            if (Input.GetKeyDown(fireLeftKey))
+            {
+                FaceLeft();
+                shooter.StartFire(-1f);
+            }
+            else if (Input.GetKeyDown(fireRightKey))
+            {
+                FaceRight();
+                shooter.StartFire(1f);
+            }
+            else
+            {
+                timeSinceShot += Time.deltaTime;
+            }
         }
 
+        if (Input.GetKeyUp(fireLeftKey))
+        {
+            shooter.StopFire(-1f);
+        }
+        else if (Input.GetKeyUp(fireRightKey))
+        {
+            shooter.StopFire(1f);
+        }
     }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground")){
@@ -68,16 +87,26 @@ public class JumperController : MonoBehaviour {
     {
         playerPos = player.transform.position.x;
         distance = Input.GetAxisRaw("Jumper") * Time.deltaTime * speed;
-        if(distance > 0)
+        if(distance > 0 && timeSinceShot > shotCooldown)
         {
-            player.transform.localRotation = Quaternion.Euler(new Vector2(player.transform.localRotation.x, 180f));
-        } else if (distance < 0)
+            FaceRight();
+        }
+        else if (distance < 0 && timeSinceShot > shotCooldown)
         {
-            player.transform.localRotation = Quaternion.Euler(new Vector2(player.transform.localRotation.x, 0f));
+            FaceLeft();
         }
 
         targetPos = playerPos + distance;
         player.transform.position = new Vector2(Mathf.Clamp(targetPos,minX,maxX), player.transform.position.y);
     }
 
+    private void FaceLeft()
+    {
+        player.transform.localRotation = Quaternion.Euler(new Vector2(player.transform.localRotation.x, 0f));
+    }
+
+    private void FaceRight()
+    {
+        player.transform.localRotation = Quaternion.Euler(new Vector2(player.transform.localRotation.x, 180f));
+    }
 }

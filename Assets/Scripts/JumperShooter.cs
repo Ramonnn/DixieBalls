@@ -7,12 +7,16 @@ public class JumperShooter : MonoBehaviour {
     public GameObject projectilePrefab, shotOrigin;
     private GameObject projectile;
     private Transform projectileParent;
-    private Animator anim;
+    private JumperController jumperController;
+    private IEnumerator coroutine;
+    public bool isShooting;
     public float shotStrength = 45f;
+    private float fireRate = .2f;
 
     private void Start()
     {
-        anim = GetComponent<Animator>();
+        isShooting = false;
+        jumperController = GetComponent<JumperController>();
         shotOrigin = GetComponentInChildren<ShotOrigin>().gameObject;
         projectileParent = GameObject.Find("Projectiles").transform;
         if (!projectileParent)
@@ -21,11 +25,35 @@ public class JumperShooter : MonoBehaviour {
         }
     }
 
-    public void Fire()
+    public void StartFire(float angle)
     {
-        Debug.Log(shotOrigin.transform.position);
+        isShooting = true;
+        coroutine = FireRepeating(angle);
+        StartCoroutine(coroutine);
+    }
+
+    public void StopFire(float angle)
+    {
+        isShooting = false;
+        Debug.Log("stopping fire");
+        StopCoroutine(coroutine);
+    }
+
+    IEnumerator FireRepeating(float angle)
+    {
+        while (isShooting)
+        {
+            Fire(angle);
+            yield return new WaitForSeconds(fireRate);
+        }
+        
+    }
+
+    public void Fire(float angle)
+    {
+        jumperController.timeSinceShot = 0f;
         projectile = Instantiate(projectilePrefab, shotOrigin.transform.position, Quaternion.identity) as GameObject;
         projectile.transform.parent = projectileParent;
-        projectile.GetComponent<Rigidbody2D>().velocity = new Vector2 (anim.GetFloat("angle") * shotStrength,0);
+        projectile.GetComponent<Rigidbody2D>().velocity = new Vector2 (angle * shotStrength,0);
     }
 }
