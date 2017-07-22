@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour {
+public class JumperMovement : MonoBehaviour {
 
     public void Jump(float jumpSpeed, Rigidbody2D rb)
     {
