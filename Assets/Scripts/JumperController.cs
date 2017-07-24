@@ -7,6 +7,7 @@ public class JumperController : MonoBehaviour {
     public float speed = 20f;
     public float jumpSpeed = 20f;
     public float timeSinceShot;
+    public Transform target;
 
     private GameObject player;
     private Rigidbody2D rb;
@@ -38,43 +39,17 @@ public class JumperController : MonoBehaviour {
 
         jumpCount = 0;
     }
-	
-	void Update () {
+
+    void Update()
+    {
 
         SetXPosition();
+        FireInDirection();
+        JumpCommand();
 
-        if (Input.GetKeyDown(jumpKey) && jumpCount < 2){
-            movement.Jump(jumpSpeed, rb);
-            jumpCount++;
-        }
-
-        if (!shooter.isShooting)
-        {
-            if (Input.GetKeyDown(fireLeftKey))
-            {
-                FaceLeft();
-                shooter.StartFire(-1f);
-            }
-            else if (Input.GetKeyDown(fireRightKey))
-            {
-                FaceRight();
-                shooter.StartFire(1f);
-            }
-            else
-            {
-                timeSinceShot += Time.deltaTime;
-            }
-        }
-
-        if (Input.GetKeyUp(fireLeftKey))
-        {
-            shooter.StopFire(-1f);
-        }
-        else if (Input.GetKeyUp(fireRightKey))
-        {
-            shooter.StopFire(1f);
-        }
     }
+
+
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -109,4 +84,44 @@ public class JumperController : MonoBehaviour {
     {
         player.transform.localRotation = Quaternion.Euler(new Vector2(player.transform.localRotation.x, 180f));
     }
+
+    private void FireInDirection()
+    {
+        if (!shooter.isShooting)
+        {
+            if (Input.GetKey(fireLeftKey))
+            {
+                FaceLeft();
+                shooter.StartFire(-1f);
+            }
+            else if (Input.GetKey(fireRightKey))
+            {
+                FaceRight();
+                shooter.StartFire(1f);
+            }
+            else
+            {
+                timeSinceShot += Time.deltaTime;
+            }
+        }
+
+        if (Input.GetKeyUp(fireLeftKey))
+        {
+            shooter.StopFire(-1f);
+        }
+        else if (Input.GetKeyUp(fireRightKey))
+        {
+            shooter.StopFire(1f);
+        }
+    }
+
+    private void JumpCommand()
+    {
+        if (Input.GetKeyDown(jumpKey) && jumpCount < 2)
+        {
+            movement.Jump(jumpSpeed, rb);
+            jumpCount++;
+        }
+    }
+
 }

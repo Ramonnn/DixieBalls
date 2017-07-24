@@ -8,7 +8,6 @@ public class SphereController : MonoBehaviour {
 
     private float sphereSize = 2;
     private Rigidbody2D rb;
-    private Vector2 currentVel;
     private float minX, minY, maxX, maxY;
 
     private void Start()
