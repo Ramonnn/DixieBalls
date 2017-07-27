@@ -5,17 +5,18 @@ using UnityEngine;
 public class PowerupSpawner : MonoBehaviour {
 
     public GameObject powerupPrefab;
+    public LayerMask mask;
 
     private GameObject powerup;
     private Camera cam;
     private Transform powerupParent;
-    private float spawnPercent = 1f;
-    private float randomPercent, camHeight, camWidth, minX, maxX, minY, maxY;
     private Vector2 spawnPosition;
+    private float spawnPercent = 25f;
+    private float randomPercent, camHeight, camWidth, minX, maxX, minY, maxY;
 
     private void Start()
     {
-        cam = GameObject.FindObjectOfType<Camera>();
+        cam = Camera.main;
         camHeight = cam.orthographicSize * 2;
         camWidth = cam.aspect * camHeight;
 
@@ -24,12 +25,8 @@ public class PowerupSpawner : MonoBehaviour {
         minX = -camWidth / 2 + 2;                                  //padding
         maxX = camWidth / 2 - 2;
 
-
         powerupParent = GameObject.Find("PowerUpSpawner").transform;
-        if (!powerupParent)
-        {
-            Debug.LogError("No powerup parent object found");
-        }
+        if (!powerupParent) {Debug.LogError("No powerup parent object found");}
     }
 
     private void Update()
@@ -44,8 +41,20 @@ public class PowerupSpawner : MonoBehaviour {
 
     private void SpawnPowerup()
     {
-        spawnPosition = new Vector2(Random.Range(minX, maxX), Random.Range(minY, maxY));
+        findEmptySpawnPosition();
         powerup = Instantiate(powerupPrefab,spawnPosition,Quaternion.identity) as GameObject;
         powerup.transform.parent = powerupParent;
+    }
+
+    private void findEmptySpawnPosition() {
+        int loopnumber = 0;
+        while (true) {
+            spawnPosition = new Vector2(Random.Range(minX, maxX), Random.Range(minY, maxY));
+            Collider[] hitColliders = Physics.OverlapSphere(spawnPosition, 3f, mask, QueryTriggerInteraction.Collide);
+            Debug.Log(loopnumber++);
+            if(hitColliders.Length == 0) {                                                          //if no hit colliders are returned by OverlapSphere, spawnPosition is empty
+                break;                                                                              //so we stop iterating to find a new spawnPosition
+            }
+        }
     }
 }
