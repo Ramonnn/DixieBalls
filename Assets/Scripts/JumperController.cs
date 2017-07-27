@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent (typeof(JumperMovement))]
+[RequireComponent (typeof(Rigidbody2D))]
 public class JumperController : MonoBehaviour {
 
     public float speed = 20f;
@@ -12,9 +14,8 @@ public class JumperController : MonoBehaviour {
     private GameObject player;
     private Rigidbody2D rb;
     private Camera cam;
-    private KeyCode jumpKey, fireLeftKey, fireRightKey;
+    private KeyCode jumpKey;
     private JumperMovement movement;
-    private JumperShooter shooter;
 
     private int jumpCount;
     private float playerPos, distance, targetPos, minX, maxX, camHeight, camWidth, shotCooldown;
@@ -22,9 +23,8 @@ public class JumperController : MonoBehaviour {
     void Start () {
         player = gameObject;
         rb = GetComponent<Rigidbody2D>();
-        cam = GameObject.FindObjectOfType<Camera>();
         movement = GetComponent<JumperMovement>();
-        shooter = GetComponent<JumperShooter>();
+        cam = Camera.main;
 
         camHeight = cam.orthographicSize * 2;                     //orthoSize = camera height half-size in game units
         camWidth = cam.aspect * camHeight;
@@ -34,22 +34,16 @@ public class JumperController : MonoBehaviour {
         shotCooldown = .5f;
 
         jumpKey = KeyCode.UpArrow;
-        fireLeftKey = KeyCode.Keypad1;
-        fireRightKey = KeyCode.Keypad3;
 
         jumpCount = 0;
     }
 
     void Update()
     {
-
         SetXPosition();
-        FireInDirection();
         JumpCommand();
-
+        timeSinceShot += Time.deltaTime;
     }
-
-
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -75,44 +69,14 @@ public class JumperController : MonoBehaviour {
         player.transform.position = new Vector2(Mathf.Clamp(targetPos,minX,maxX), player.transform.position.y);
     }
 
-    private void FaceLeft()
+    public void FaceLeft()
     {
         player.transform.localRotation = Quaternion.Euler(new Vector2(player.transform.localRotation.x, 0f));
     }
 
-    private void FaceRight()
+    public void FaceRight()
     {
         player.transform.localRotation = Quaternion.Euler(new Vector2(player.transform.localRotation.x, 180f));
-    }
-
-    private void FireInDirection()
-    {
-        if (!shooter.isShooting)
-        {
-            if (Input.GetKey(fireLeftKey))
-            {
-                FaceLeft();
-                shooter.StartFire(-1f);
-            }
-            else if (Input.GetKey(fireRightKey))
-            {
-                FaceRight();
-                shooter.StartFire(1f);
-            }
-            else
-            {
-                timeSinceShot += Time.deltaTime;
-            }
-        }
-
-        if (Input.GetKeyUp(fireLeftKey))
-        {
-            shooter.StopFire(-1f);
-        }
-        else if (Input.GetKeyUp(fireRightKey))
-        {
-            shooter.StopFire(1f);
-        }
     }
 
     private void JumpCommand()
@@ -123,5 +87,4 @@ public class JumperController : MonoBehaviour {
             jumpCount++;
         }
     }
-
 }
