@@ -11,7 +11,10 @@ public class PowerupSpawner : MonoBehaviour {
     private Camera cam;
     private Transform powerupParent;
     private Vector2 spawnPosition;
-    private float spawnPercent = 25f;
+    private Collider2D[] results = new Collider2D[4];
+
+    private float spawnPercent = 1.5f;
+    private float spawnCheckRadius = 0.5f;
     private float randomPercent, camHeight, camWidth, minX, maxX, minY, maxY;
 
     private void Start()
@@ -21,9 +24,9 @@ public class PowerupSpawner : MonoBehaviour {
         camWidth = cam.aspect * camHeight;
 
         minY = cam.transform.position.y;
-        maxY = cam.transform.position.y + camHeight / 2;
-        minX = -camWidth / 2 + 2;                                  //padding
-        maxX = camWidth / 2 - 2;
+        maxY = cam.transform.position.y + camHeight / 2 - .5f;        //padding
+        minX = -camWidth / 2 + 1;                                  
+        maxX = camWidth / 2 - 1;
 
         powerupParent = GameObject.Find("PowerUpSpawner").transform;
         if (!powerupParent) {Debug.LogError("No powerup parent object found");}
@@ -41,20 +44,21 @@ public class PowerupSpawner : MonoBehaviour {
 
     private void SpawnPowerup()
     {
-        findEmptySpawnPosition();
-        powerup = Instantiate(powerupPrefab,spawnPosition,Quaternion.identity) as GameObject;
-        powerup.transform.parent = powerupParent;
+        if (findEmptySpawnPosition()) {
+            powerup = Instantiate(powerupPrefab, spawnPosition, Quaternion.identity) as GameObject;
+            powerup.transform.parent = powerupParent;
+        }
     }
 
-    private void findEmptySpawnPosition() {
-        int loopnumber = 0;
-        while (true) {
+    private bool findEmptySpawnPosition() {
+        for(int i = 0; i < 15; i++) {
             spawnPosition = new Vector2(Random.Range(minX, maxX), Random.Range(minY, maxY));
-            Collider[] hitColliders = Physics.OverlapSphere(spawnPosition, 3f, mask, QueryTriggerInteraction.Collide);
-            Debug.Log(loopnumber++);
-            if(hitColliders.Length == 0) {                                                          //if no hit colliders are returned by OverlapSphere, spawnPosition is empty
-                break;                                                                              //so we stop iterating to find a new spawnPosition
+
+            if (Physics2D.OverlapCircleNonAlloc(spawnPosition, spawnCheckRadius, results, mask) == 0) {
+                return true;
             }
         }
+        Debug.LogWarning("Failed to find a suitable powerup spawnPosition within 15 attempts");
+        return false;
     }
 }
